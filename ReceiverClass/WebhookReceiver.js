@@ -36,6 +36,10 @@ const certs = {
     cert: fs.readFileSync(__dirname + '/cert.pem')
 };
 
+// Static Helix ALM project URL config
+const HALM_BASE_URL = 'http://jquesta0725/ttweb/index.html#Default';
+const HALM_PROJECT_ID = 65;
+
 // Initialize variables
 const requestListener = express();
 const serverPort = process.argv.length > 2 ? process.argv[2] : 3000;
@@ -69,6 +73,16 @@ requestListener.use(express.json());
 // Getting the webhook
 requestListener.post(webhooksPath, async (request, response) => {
   const receivedWebhook = { headers: request.headers, body: request.body };
+
+  // Add httpurl field to each event's item
+  if (receivedWebhook.body && Array.isArray(receivedWebhook.body.events)) {
+    receivedWebhook.body.events.forEach((event) => {
+      if (event.item && event.item.number != null) {
+        event.item.httpurl = `${HALM_BASE_URL}/${HALM_PROJECT_ID}/issues/${event.item.number}/`;
+      }
+    });
+  }
+
   response.sendStatus(statusCode);
   webhooksRecieved.push(receivedWebhook);
 
